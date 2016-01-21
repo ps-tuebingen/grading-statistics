@@ -3,11 +3,23 @@
 (require racket/list)
 (require racket/dict)
 
+(require (planet dherman/csv-write:1:2/csv-write))
+
 (require "student-eval-utils.rkt")
 
 (define TUTORS-VIEW-FOLDER "tutors-view")
 
-(define CHECKER-GOODNESSES #(["02-Ausdruecke" #t]))
+; TODO: read those from a file
+(define CHECKER-GOODNESSES #hash(["01-Erste-Schritte" . #t]
+                                 ["02-Ausdruecke" . #t]
+                                 ["03-Konstanten-und-Funktionen" . #t]
+                                 ["04-Entwurfsrezept" . #t]
+                                 ["05-Top-Down-Entwurf" . #t]
+                                 ["06-Datentypen" . #f]
+                                 ["07-Big-Bang-Mehr-Datentypen" . #t]
+                                 ["08-Rekursive-Datentypen" . #t]
+                                 ["09-Breakout" . #f]
+                                 ["10-Patternmatching-S-Expressions" . #t]))
 
 ; A table for grading data is a list of table entries for grading data.
 ; A table entry for grading data (grading-data) consists of:
@@ -50,3 +62,14 @@
 (define (collect-grading-data cgs wd)
   (define tutors-view (build-path wd TUTORS-VIEW-FOLDER))
   (append-map (collect-hw-grading-data cgs tutors-view) (homework-folders tutors-view)))
+
+; Write collected (from the wd) grading data to the given output port out
+(define (write-grading-data-csv cgs wd out)
+  (write-table (map (lambda (gd) (list (grading-data-student gd)
+                                        (grading-data-homework gd)
+                                        (grading-data-number-handins gd)
+                                        (grading-data-grade gd)
+                                        (grading-data-good-checker? gd)
+                                        (grading-data-tutor gd)))
+                     (collect-grading-data cgs wd))
+               out))
