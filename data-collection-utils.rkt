@@ -35,7 +35,7 @@
 ; Path String -> List-of grading-data
 ; TODO: adapt students-with-graded-handins and related functions to optionally allow a tutor argument for working in the tutors' view
 (define ((collect-tutor-grading-data cgs tv hw) t)
-  (append-map (collect-student-grading-data cgs tv hw t) (students-with-graded-handins tv hw
+  (map (collect-student-grading-data cgs tv hw t) (students-with-graded-handins tv hw
                                                                                        #:tutor t)))
 
 ; Collect the grading data for the given homework hw in the tutors' view tv
