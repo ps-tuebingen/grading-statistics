@@ -19,6 +19,17 @@
 ; =========================================
 ; =========================================
 
+; Path -> List-of Path
+; The list of all homework folders in the wd
+(define (homework-folders wd)
+  (define (filename p) (call-with-values
+                        (lambda () (split-path p))
+                        (lambda (b n d) (path->string n))))
+  (define (is-homework-folder? p)
+    (and (directory-exists? p)
+         (char-numeric? (first (string->list (filename p))))))
+  (map filename (filter is-homework-folder? (directory-list wd #:build? #t))))
+
 ; A StudentScore consists of
 ; - a Path: the exercise folder.
 ; - a Bool: When the student handed something in it is #t, otherwise #f.
@@ -42,18 +53,7 @@
               (make-student-score f #t #f)))
         (make-student-score f #f #f))))
 
-; Path -> List-of Path
-; The list of all homework folders in the wd
-(define (homework-folders wd)
-  (define (filename p) (call-with-values
-                        (lambda () (split-path p))
-                        (lambda (b n d) (path->string n))))
-  (define (is-homework-folder? p)
-    (and (directory-exists? p)
-         (char-numeric? (first (string->list (filename p))))))
-  (map filename (filter is-homework-folder? (directory-list wd #:build? #t))))
-
-; String Path -> List-of StudentScore
+; String Path Boolean -> List-of StudentScore
 ; The list of all scores for the given student (over all homework subdirectories in the wd)
 (define (student-scores s wd)
   (map (lambda (d) (retrieve-student-score (build-path wd d s))) (homework-folders wd)))
@@ -67,22 +67,30 @@
             (display (format "~a : unfinished or invalid grading table\n" exercise-name)))
         (display (format "~a : no homework handed in\n" exercise-name))))))
 
-; Path (U #f Points) (U #f Points) -> List-of String
+; Path (U #f Points) (U #f Points) (U #f String) -> List-of String
 ; List all students that have a graded handin, respective to the given homework hw
 ; With the optional arguments min and max, one can exclude students which have average (over all homeworks)
 ; grades below or above a certain number of points
-(define (students-with-graded-handins wd hw [min 0] [max +inf.0])
+; Optional argument t is the name of the desired tutor directory (use when operating inside tutors' view)
+(define (students-with-graded-handins wd hw [min 0] [max +inf.0] #:tutor [t #f])
+  (define super-student-dir (if t
+                                (build-path wd hw t)
+                                (build-path wd hw)))
+  (define non-tutors-view-wd (if t
+                                 (build-path wd 'up)
+                                 wd))
   (filter (lambda (s) (and
-                       (student-score-points (retrieve-student-score (build-path wd hw s)))
-                       (let ([m (mean (filter (negate false?) (map student-score-points (student-scores s wd))))])
+                       (student-score-points (retrieve-student-score (build-path super-student-dir s)))
+                       (let ([m (mean (filter (negate false?) (map student-score-points (student-scores s non-tutors-view-wd))))])
                          (and (> m min) (< m max)))))
-          (remove-duplicates (map get-user-name-from-path (find-all-grade-files (build-path wd hw) 1)))))
+          (remove-duplicates (map get-user-name-from-path (find-all-grade-files super-student-dir 1)))))
 
 ; Path -> List-of String
 ; List all students that have a graded handin for any of the homeworks
 (define (students-with-any-graded-handin wd)
   (remove-duplicates (append-map (lambda (hw) (students-with-graded-handins wd hw))
                                  (homework-folders wd))))
+
 
 ; Performance drops
 ; =================
@@ -152,8 +160,11 @@
 
 ; String Path -> Natural
 ; How often the student handed in for the respective homework hw, false when there is no directory for this student
-(define (number-of-handins s wd hw)
-  (let ([student-directory (build-path (build-path wd hw) s)])
+; Optional argument: t - the name of the tutor directory within the homework directory, specify this when working within the tutors' view
+(define (number-of-handins s wd hw [t #f])
+  (let ([student-directory (if t
+                               (build-path wd hw t s)
+                               (build-path (build-path wd hw) s))])
     (if (directory-exists? student-directory)
         (length (filter (handin-dir? student-directory) (directory-list student-directory)))
         #f)))
