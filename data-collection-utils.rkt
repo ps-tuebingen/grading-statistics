@@ -65,11 +65,13 @@
 
 ; Write collected (from the wd) grading data to the given output port out
 (define (write-grading-data-csv cgs wd out)
-  (write-table (map (lambda (gd) (list (grading-data-student gd)
+  (write-table (cons
+                (list "student-id" "hw-id" "n-handins" "grade" "good-checker" "tutor-id")
+                (map (lambda (gd) (list (grading-data-student gd)
                                         (grading-data-homework gd)
                                         (grading-data-number-handins gd)
                                         (grading-data-grade gd)
                                         (grading-data-good-checker? gd)
                                         (grading-data-tutor gd)))
-                     (collect-grading-data cgs wd))
+                     (collect-grading-data cgs wd)))
                out))
