@@ -19,7 +19,7 @@
     (/ (exercise-score i gt) max-score)))
 
 (define (means-per-exercise wd)
-  (define max-template (read-grading-table (build-path wd GRADE-MAX-FILENAME)))
+  (define max-template (read-grading-table (build-path wd TEMPLATE-FILENAME)))
   (define grading-records (all-finished-grading-tables wd))
   (define (max-score i) (third (list-ref max-template i)))
   (for ([i (range 1 (length max-template))])
@@ -36,7 +36,7 @@
                                grading-records))))))))))
 
 (define (histo-for-exercise i wd)
-  (define max-template (read-grading-table (build-path wd GRADE-MAX-FILENAME)))
+  (define max-template (read-grading-table (build-path wd TEMPLATE-FILENAME)))
   (for [(q (normalized-grade-histogram (map (lambda (gt) (percentify (normalized-exercise-score i gt max-template)))
                                             (all-finished-grading-tables wd))))]
     (display (format "Point range ~a : ~a %\n" (car q) (real->decimal-string (cdr q))))))

@@ -8,8 +8,6 @@
          "student-eval-utils.rkt"
          "exercise-eval-utils.rkt")
 
-(define TEMPLATE-FILENAME "grade-template.rktd")
-
 (define args (current-command-line-arguments))
 
 (define options

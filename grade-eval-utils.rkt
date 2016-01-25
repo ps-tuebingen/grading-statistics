@@ -9,7 +9,7 @@
 (require "users.rkt")
 
 (define GRADE-FILENAME "grade.rktd")
-(define GRADE-MAX-FILENAME "grade-max.rktd")
+(define TEMPLATE-FILENAME "grade-template.rktd")
 (define DIRECTORY-SEARCH-DEPTH-LIMIT 2)
 
 
