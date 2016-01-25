@@ -9,18 +9,6 @@
 
 (define TUTORS-VIEW-FOLDER "tutors-view")
 
-; TODO: read those from a file
-(define CHECKER-GOODNESSES #hash(["01-Erste-Schritte" . #t]
-                                 ["02-Ausdruecke" . #t]
-                                 ["03-Konstanten-und-Funktionen" . #t]
-                                 ["04-Entwurfsrezept" . #t]
-                                 ["05-Top-Down-Entwurf" . #t]
-                                 ["06-Datentypen" . #f]
-                                 ["07-Big-Bang-Mehr-Datentypen" . #t]
-                                 ["08-Rekursive-Datentypen" . #t]
-                                 ["09-Breakout" . #f]
-                                 ["10-Patternmatching-S-Expressions" . #t]))
-
 ; A table for grading data is a list of table entries for grading data.
 ; A table entry for grading data (grading-data) consists of:
 ; - a Student ID (String)
@@ -48,7 +36,7 @@
 ; TODO: adapt students-with-graded-handins and related functions to optionally allow a tutor argument for working in the tutors' view
 (define ((collect-tutor-grading-data cgs tv hw) t)
   (map (collect-student-grading-data cgs tv hw t) (students-with-graded-handins tv hw
-                                                                                       #:tutor t)))
+                                                                                #:tutor t)))
 
 ; Collect the grading data for the given homework hw in the tutors' view tv
 ; For argument cgs, see collect-student-grading-data.
@@ -64,14 +52,17 @@
   (append-map (collect-hw-grading-data cgs tutors-view) (homework-folders tutors-view)))
 
 ; Write collected (from the wd) grading data to the given output port out
-(define (write-grading-data-csv cgs wd out)
-  (write-table (cons
-                (list "student-id" "hw-id" "n-handins" "grade" "good-checker" "tutor-id")
-                (map (lambda (gd) (list (grading-data-student gd)
-                                        (grading-data-homework gd)
-                                        (grading-data-number-handins gd)
-                                        (grading-data-grade gd)
-                                        (grading-data-good-checker? gd)
-                                        (grading-data-tutor gd)))
-                     (collect-grading-data cgs wd)))
-               out))
+; Argument cgs-file is a file from which to load the checker goodnesses
+(define (write-grading-data-csv cgs-file wd out)
+  (let ((cgs (call-with-input-file* cgs-file
+               (λ (input-port)(read input-port)))))
+    (write-table (cons
+                  (list "student-id" "hw-id" "n-handins" "grade" "good-checker" "tutor-id")
+                  (map (lambda (gd) (list (grading-data-student gd)
+                                          (grading-data-homework gd)
+                                          (grading-data-number-handins gd)
+                                          (grading-data-grade gd)
+                                          (grading-data-good-checker? gd)
+                                          (grading-data-tutor gd)))
+                       (collect-grading-data cgs wd)))
+                 out)))
