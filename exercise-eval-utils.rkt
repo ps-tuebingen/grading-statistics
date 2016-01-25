@@ -18,7 +18,7 @@
   (map third (cdr gt)))
 
 (define (normalized-exercise-score i gt template)
-  (let ([max-score (list-ref (extract-max-points template) i)])
+  (let ([max-score (list-ref (extract-max-points template) (- i 1))])
     (/ (exercise-score i gt) max-score)))
 
 (define (means-per-exercise wd)
