@@ -1,14 +1,14 @@
 #lang racket/base
 
-(require racket/match
+(require racket/list
+         racket/match
          racket/string
          handin-server/format-grade
          "grade-eval-utils.rkt"
          "student-eval-utils.rkt"
          "exercise-eval-utils.rkt")
 
-; this file simply contains the max. points schema
-(define SCHEMA-FILENAME "schema.rktd")
+(define TEMPLATE-FILENAME "grade-template.rktd")
 
 (define args (current-command-line-arguments))
 
@@ -38,11 +38,14 @@
       (string->path (vector-ref args 1))
       (display-error (format "Path not found: ~a" (vector-ref args 1)))))
 
-(define schema
-  (let ([schema-file (build-path working-directory SCHEMA-FILENAME)])
-    (and (file-exists? schema-file)
-         (or (read-grading-table schema-file)
-             (display-error (format "Problem loading schema file: ~a" schema-file))))))
+(define (extract-max-points gt)
+  (map third (cdr gt)))
+
+(define max-points
+  (let ([template-file (build-path working-directory TEMPLATE-FILENAME)])
+    (and (file-exists? template-file)
+         (or (extract-max-points (read-grading-table template-file))
+             (display-error (format "Problem loading max. points from template: ~a" template-file))))))
 
 (define student
   (if (< (vector-length args) 3)
@@ -96,8 +99,8 @@
                             (display-error "Please specify which exercise"))]
   
   
-  ["verify" (if schema
-                (verify working-directory (parse-schema schema))
+  ["verify" (if max-points
+                (verify working-directory max-points)
                 (display-error
-                 (string-append "Schema file not found, searched for " SCHEMA-FILENAME " in " (path->string working-directory))))]
+                 (string-append "Template file not found, searched for " TEMPLATE-FILENAME " in " (path->string working-directory))))]
   [else (usage)])

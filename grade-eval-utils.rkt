@@ -268,10 +268,3 @@
         (display (format "~a : mean score : ~a %\n"
                          f
                          (real->decimal-string (mean (scores directory)))))))))
-
-(define (parse-schema s)
-  (if (and
-       (list? s)
-       (for/and [(m s)] (number? m)))
-      s
-      (error (format "Cannot parse grade schema, must be list of numbers: ~a" s))))
