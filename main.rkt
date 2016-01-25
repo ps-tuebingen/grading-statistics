@@ -36,9 +36,6 @@
       (string->path (vector-ref args 1))
       (display-error (format "Path not found: ~a" (vector-ref args 1)))))
 
-(define (extract-max-points gt)
-  (map third (cdr gt)))
-
 (define max-points
   (let ([template-file (build-path working-directory TEMPLATE-FILENAME)])
     (and (file-exists? template-file)
