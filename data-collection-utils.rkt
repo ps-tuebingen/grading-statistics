@@ -38,6 +38,13 @@
   (map (collect-student-grading-data cgs tv hw t) (students-with-graded-handins tv hw
                                                                                 #:tutor t)))
 
+; TODO: find a better place for this
+; Collects the number of student folders for all tutors for homework hw in the tutors' view tv
+(define (collect-student-numbers tv hw)
+  (map (lambda (t) (string-append (path->string t) ": "
+                    (number->string (length (directory-list (build-path tv hw t))))))
+       (directory-list (build-path tv hw))))
+
 ; Collect the grading data for the given homework hw in the tutors' view tv
 ; For argument cgs, see collect-student-grading-data.
 ; Path String -> List-of grading-data
