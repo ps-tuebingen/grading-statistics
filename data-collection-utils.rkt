@@ -8,6 +8,9 @@
 
 (require "student-eval-utils.rkt")
 
+; For statistics use (csv dump generation)
+; ========================================
+
 (define TUTORS-VIEW-FOLDER "tutors-view")
 
 ; A table for grading data is a list of table entries for grading data.
@@ -43,7 +46,7 @@
 ; Collects the number of student folders for all tutors for homework hw in the tutors' view tv
 (define (collect-student-numbers tv hw)
   (map (lambda (t) (string-append (path->string t) ": "
-                    (number->string (length (directory-list (build-path tv hw t))))))
+                                  (number->string (length (directory-list (build-path tv hw t))))))
        (directory-list (build-path tv hw))))
 
 ; Collect the grading data for the given homework hw in the tutors' view tv
@@ -77,4 +80,55 @@
                        (collect-grading-data cgs wd)))
                  out)))
 
-; (write-grading-data-csv "../info1-teaching-material/statistics/checker-goodnesses.rktd" "../LocalPathForAllHandins/production" "../test.csv")
+; (write-grading-data-csv "../info1-teaching-material/statistics/checker-goodnesses.rktd" "../LocalPathForAllHandins/production" (open-output-file "../test.csv"))
+
+; For documentation (to show to students, ...)
+; ============================================
+
+; A table for grading documentation is a list of grading-doc-rows.
+; A grading-doc-row consists of:
+; - student-id: a String
+; - homework-or-all: either a String that identifies the homework or 'all which indicates that the row contains all hw points summed up
+; - points: the points of the student for the respective homework or in sum, depending on homework-or-all
+; - max-points: the maximum points possible, likewise depending on homework-or-all
+; - handin?: a Boolean, indicates whether the student handed something in (only relevant when homework-or-all is not 'all)
+(define-struct grading-doc-row (student homework-or-all points max-points handin?))
+
+; Collect all grading documentation for the given student s from the working directory wd
+; String Path -> List-of grading-doc-row
+(define (collect-grading-doc s wd)
+  (let ((scores (student-scores s wd)))
+    (append (map (lambda (scr) (grading-doc-row s
+                                              (path->string (student-score-path scr))
+                                              (if (student-score-points scr)
+                                                  (student-score-points scr)
+                                                  0)
+                                              100 ; TODO: read from grade template
+                                              (student-score-handin? scr)))
+               scores)
+            (list (grading-doc-row s
+                           'all
+                           (apply + (map (lambda (score) (if (student-score-points score)
+                                                             (student-score-points score)
+                                                             0))
+                                         scores))
+                           (* (length scores) 100) ; TODO read from grade templates
+                           #t))))) ; Note: irrelevant data, don't interpret this as "handed something in"
+
+; Write collected (from the wd) grading documentation to the given output port out
+(define (write-grading-docs-csv wd out)
+  (write-table (cons
+                (list "student-id" "homework-or-all" "points" "max-points" "handin?")
+                (append-map (lambda (s)
+                              (map (lambda (gd) (list (grading-doc-row-student gd)
+                                                      (grading-doc-row-homework-or-all gd)
+                                                      (grading-doc-row-points gd)
+                                                      (grading-doc-row-max-points gd)
+                                                      (if (grading-doc-row-handin? gd)
+                                                          "true"
+                                                          "false")))
+                                   (collect-grading-doc s wd)))
+                            (students-with-any-graded-handin wd)))
+                out))
+
+; (write-grading-docs-csv "../LocalPathForAllHandins/production" (open-output-file "../docs.csv"))
