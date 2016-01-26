@@ -2,6 +2,7 @@
 
 (require racket/list)
 (require racket/dict)
+(require file/md5)
 
 (require (planet dherman/csv-write:1:2/csv-write))
 
@@ -28,7 +29,7 @@
                 (number-of-handins s tv hw t)
                 (student-score-points score)
                 (dict-ref cgs hw)
-                t))
+                (path->string t)))
 
 ; Collect the grading data for the given homework hw and tutor t in the tutors' view tv
 ; For argument cgs, see collect-student-grading-data.
@@ -65,11 +66,15 @@
                (λ (input-port)(read input-port)))))
     (write-table (cons
                   (list "student-id" "hw-id" "n-handins" "grade" "good-checker" "tutor-id")
-                  (map (lambda (gd) (list (grading-data-student gd)
+                  (map (lambda (gd) (list (md5 (grading-data-student gd))
                                           (grading-data-homework gd)
                                           (grading-data-number-handins gd)
                                           (grading-data-grade gd)
-                                          (grading-data-good-checker? gd)
-                                          (grading-data-tutor gd)))
+                                          (if (grading-data-good-checker? gd)
+                                              1
+                                              0)
+                                          (md5 (grading-data-tutor gd))))
                        (collect-grading-data cgs wd)))
                  out)))
+
+; (write-grading-data-csv "../info1-teaching-material/statistics/checker-goodnesses.rktd" "../LocalPathForAllHandins/production" "../test.csv")
