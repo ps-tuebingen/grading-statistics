@@ -140,3 +140,15 @@
                 out))
 
 ; (write-grading-docs-csv "../LocalPathForAllHandins/production" (open-output-file "../docs.csv"))
+
+; TODO: implement the below function, keeping in mind:
+; - Follow users.rkt for the csv reading and refactor
+; - Trim down to only columns relevant for the report generator. Supposedly, these are "username" and "email"
+; (the idea is that students are uniquely identified both by "username" and by "email", "username" identifies students in
+; the collected homework data and "email" identifies them everywhere else (?))
+
+; Trim down a users.csv (student overview from forum json dump) as given by in and write the result to out
+;(define (trim-users-csv in out)
+;  (let ((overview-table (call-with-input-file* in
+;                          (λ (input-port)(read input-port)))))
+;    ))
