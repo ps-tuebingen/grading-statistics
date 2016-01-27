@@ -7,6 +7,7 @@
 (require (planet dherman/csv-write:1:2/csv-write))
 
 (require "student-eval-utils.rkt")
+(require (only-in "exercise-eval-utils.rkt" max-points-for-wd))
 
 ; For statistics use (csv dump generation)
 ; ========================================
@@ -69,14 +70,14 @@
                (λ (input-port)(read input-port)))))
     (write-table (cons
                   (list "student-id" "hw-id" "n-handins" "grade" "good-checker" "tutor-id")
-                  (map (lambda (gd) (list (md5 (grading-data-student gd))
+                  (map (lambda (gd) (list (subbytes (md5 (grading-data-student gd)) 0 6)
                                           (grading-data-homework gd)
                                           (grading-data-number-handins gd)
                                           (grading-data-grade gd)
                                           (if (grading-data-good-checker? gd)
                                               1
                                               0)
-                                          (md5 (grading-data-tutor gd))))
+                                          (subbytes (md5 (grading-data-tutor gd)) 0 6)))
                        (collect-grading-data cgs wd)))
                  out)))
 
@@ -94,6 +95,12 @@
 ; - handin?: a Boolean, indicates whether the student handed something in (only relevant when homework-or-all is not 'all)
 (define-struct grading-doc-row (student homework-or-all points max-points handin?))
 
+; The maximum points for the given homework hw (in working directory wd)
+; (often 100, but not always)
+; Path String -> Points
+(define (sum-max-points-for-hw wd hw)
+  (apply + (max-points-for-wd (build-path wd hw))))
+
 ; Collect all grading documentation for the given student s from the working directory wd
 ; String Path -> List-of grading-doc-row
 (define (collect-grading-doc s wd)
@@ -103,7 +110,7 @@
                                               (if (student-score-points scr)
                                                   (student-score-points scr)
                                                   0)
-                                              100 ; TODO: read from grade template
+                                              (sum-max-points-for-hw wd (student-score-path scr))
                                               (student-score-handin? scr)))
                scores)
             (list (grading-doc-row s
@@ -112,7 +119,8 @@
                                                              (student-score-points score)
                                                              0))
                                          scores))
-                           (* (length scores) 100) ; TODO read from grade templates
+                           (apply + (map (lambda (score) (sum-max-points-for-hw wd (student-score-path score)))
+                                         scores))
                            #t))))) ; Note: irrelevant data, don't interpret this as "handed something in"
 
 ; Write collected (from the wd) grading documentation to the given output port out

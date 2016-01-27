@@ -17,6 +17,11 @@
 (define (extract-max-points gt)
   (map third (cdr gt)))
 
+(define (max-points-for-wd wd)
+   (let ([template-file (build-path wd TEMPLATE-FILENAME)])
+     (and (file-exists? template-file)
+          (extract-max-points (read-grading-table template-file)))))
+
 (define (normalized-exercise-score i gt template)
   (let ([max-score (list-ref (extract-max-points template) (- i 1))])
     (/ (exercise-score i gt) max-score)))

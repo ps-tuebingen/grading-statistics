@@ -36,11 +36,9 @@
       (string->path (vector-ref args 1))
       (display-error (format "Path not found: ~a" (vector-ref args 1)))))
 
-(define max-points
-  (let ([template-file (build-path working-directory TEMPLATE-FILENAME)])
-    (and (file-exists? template-file)
-         (or (extract-max-points (read-grading-table template-file))
-             (display-error (format "Problem loading max. points from template: ~a" template-file))))))
+(define (max-points wd)
+  (or (max-points-for-wd wd)
+      (display-error (format "Problem loading max. points from template: ~a" (build-path wd TEMPLATE-FILENAME)))))
 
 (define student
   (if (< (vector-length args) 3)
@@ -94,8 +92,9 @@
                             (display-error "Please specify which exercise"))]
   
   
-  ["verify" (if max-points
-                (verify working-directory max-points)
-                (display-error
-                 (string-append "Template file not found, searched for " TEMPLATE-FILENAME " in " (path->string working-directory))))]
+  ["verify" (let ((maxp (max-points working-directory)))
+              (if maxp
+                  (verify working-directory maxp)
+                  (display-error
+                   (string-append "Template file not found, searched for " TEMPLATE-FILENAME " in " (path->string working-directory)))))]
   [else (usage)])
