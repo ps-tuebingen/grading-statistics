@@ -36,6 +36,11 @@
       #f
       (vector-ref args 2)))
 
+(define users-file
+  (if (< (vector-length args) 3)
+      #f
+      (vector-ref args 2)))
+
 (define out (current-output-port))
 
 (match (vector-ref args 0)
@@ -43,4 +48,6 @@
                     (write-grading-data-csv cgs-file working-directory out)
                     (display-error "Please specify which \"checker goodnesses\" file to use"))]
   ["grading-doc" (write-grading-docs-csv working-directory out)]
-  ["student-identification" (write-sid-table #f out)]) ; TODO: actually read users.csv file in (see TODO for write-sid-table)
+  ["student-identification" (if users-file
+                                (write-sid-table (open-input-file users-file) out)
+                                (display-error "Please specify users.csv file"))]) ; TODO: actually read users.csv file in (see TODO for write-sid-table)

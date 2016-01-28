@@ -7,28 +7,27 @@
 
 (provide all user->studiengang)
 
-(define make-food-csv-reader
+(define (make-food-csv-reader in)
   (make-csv-reader-maker
    '((separator-chars               #\,)
      (strip-leading-whitespace?  . #t)
      (strip-trailing-whitespace? . #t))))
 
-(define next-row
-      (make-food-csv-reader (open-input-file "/Users/julian/Downloads/users.csv")))
+(define (next-row in)
+      (make-food-csv-reader in))
 
-(define ignore (next-row)) ; skip header
-
-(define (all-users)
-  (let ((x (next-row)))
+(define (all-users in)
+  (define ignore (next-row in)) ; skip header
+  (let ((x (next-row in)))
     (if (empty? x)
         empty
-        (cons x (all-users)))))
+        (cons x (all-users in)))))
 
-(define all (all-users))
+(define (all in) (all-users in))
 
-(define user->studiengang
+(define (user->studiengang in)
   (make-hash
-   (map (lambda (l) (cons (string-downcase (list-ref l 2)) (list-ref l 36))) all)))
+   (map (lambda (l) (cons (string-downcase (list-ref l 2)) (list-ref l 36))) (all in))))
    ;(map (lambda (l) (cons (list-ref l 2) (list-ref l 36))) all)))
 
 ; (list-of X) (X -> String) -> (hash String Number)

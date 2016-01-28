@@ -166,7 +166,7 @@
 (define (users-csv->sid-table in)
   (define (trim-row row)
     (student-identification-row (string-downcase (list-ref row USERNAME-COLUMN)) (list-ref row MNR-COLUMN) (string=? (list-ref row MEDIZINTECHNIK-COLUMN) MEDIZINTECHNIK-STRING)))
-  (let ((overview-table users:all))
+  (let ((overview-table (users:all in)))
     (map trim-row overview-table)))
 
 ; Write the student id table generated from users.csv as given by in to the given output port out
