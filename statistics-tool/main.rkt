@@ -16,7 +16,7 @@
         "means-per-exercise" "histo-for-exercise"))
 
 (define (usage)
-  (display (string-append "usage: racket -l grading-statistics ("
+  (display (string-append "usage: racket -l statistics-tool ("
                           (string-join options "|")
                           ") <path> <arg> ... \n"
                           "for the arguments see the respective option \n")))

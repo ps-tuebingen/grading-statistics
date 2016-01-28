@@ -6,9 +6,13 @@
 
 (require (planet dherman/csv-write:1:2/csv-write))
 
-(require (prefix-in users: "users.rkt"))
-(require "student-eval-utils.rkt")
-(require (only-in "exercise-eval-utils.rkt" max-points-for-wd))
+(require (prefix-in users: "../statistics-tool/users.rkt"))
+(require "../statistics-tool/student-eval-utils.rkt")
+(require (only-in "../statistics-tool/exercise-eval-utils.rkt" max-points-for-wd))
+
+(provide write-grading-data-csv
+         write-grading-docs-csv
+         write-sid-table)
 
 ; For statistics use (csv dump generation)
 ; ========================================

@@ -14,7 +14,7 @@
      (strip-trailing-whitespace? . #t))))
 
 (define next-row
-      (make-food-csv-reader (open-input-file "/path/to/users.csv")))
+      (make-food-csv-reader (open-input-file "/Users/julian/Downloads/users.csv")))
 
 (define ignore (next-row)) ; skip header
 

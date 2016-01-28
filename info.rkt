@@ -7,7 +7,6 @@
                "drracket"
                "drracket-plugin-lib"
                "gui-lib"
-               "handin"
                "htdp-lib"
                "net-lib"
                "pconvert-lib"
