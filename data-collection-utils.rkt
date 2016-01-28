@@ -6,6 +6,7 @@
 
 (require (planet dherman/csv-write:1:2/csv-write))
 
+(require (prefix-in users: "users.rkt"))
 (require "student-eval-utils.rkt")
 (require (only-in "exercise-eval-utils.rkt" max-points-for-wd))
 
@@ -141,14 +142,37 @@
 
 ; (write-grading-docs-csv "../LocalPathForAllHandins/production" (open-output-file "../docs.csv"))
 
-; TODO: implement the below function, keeping in mind:
-; - Follow users.rkt for the csv reading and refactor
-; - Trim down to only columns relevant for the report generator. Supposedly, these are "username" and "email"
-; (the idea is that students are uniquely identified both by "username" and by "email", "username" identifies students in
-; the collected homework data and "email" identifies them everywhere else (?))
+; A student identification table (to be used for report generation) is a list of student-identification-row
+; A student-identification-row consists of:
+; - hw-username: a String that identifies a student in homework grading documentation
+; - matrikelnr: a String that is the Matrikelnr. of the student
+; - medizintechnik?: a Boolean, true iff the student studies Medizintechnik at Uni Stuttgart
+; TODO: generalize this to custom strings
+(define-struct student-identification-row (hw-username matrikelnr medizintechnik?))
 
-; Trim down a users.csv (student overview from forum json dump) as given by in and write the result to out
-;(define (trim-users-csv in out)
-;  (let ((overview-table (call-with-input-file* in
-;                          (λ (input-port)(read input-port)))))
-;    ))
+; Some constants for use in reading in student id tables from users.csv files
+(define MEDIZINTECHNIK-STRING "Medizintechnik (Uni Stuttgart)")
+(define USERNAME-COLUMN 2)
+(define MNR-COLUMN 43)
+(define MEDIZINTECHNIK-COLUMN 36)
+
+; Read a users.csv (student overview from forum json dump) as given by in
+; any/c -> List-of student-identification-row
+; TODO: parameter in is currently ignored, instead just whatever is provided by users:all is used -> change users:all to allow a parameter
+(define (users-csv->sid-table in)
+  (define (trim-row row)
+    (student-identification-row (string-downcase (list-ref row USERNAME-COLUMN)) (list-ref row MNR-COLUMN) (string=? (list-ref row MEDIZINTECHNIK-COLUMN) MEDIZINTECHNIK-STRING)))
+  (let ((overview-table users:all))
+    (map trim-row overview-table)))
+
+; Write the student id table generated from users.csv as given by in to the given output port out
+(define (write-sid-table in out)
+  (write-table (cons
+                (list "username" "matrikelnr" "medizintechnik?")
+                (map (lambda (row) (list (student-identification-row-hw-username row)
+                                         (student-identification-row-matrikelnr row)
+                                         (if (student-identification-row-medizintechnik? row)
+                                             "true"
+                                             "false")))
+                     (users-csv->sid-table in)))
+               out))
