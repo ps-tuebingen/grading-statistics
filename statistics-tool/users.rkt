@@ -5,25 +5,29 @@
 
 (require (planet neil/csv:1:=7))
 
-(provide all user->studiengang)
+(provide start-reading-csv all user->studiengang)
 
-(define (make-food-csv-reader in)
+(define make-food-csv-reader
   (make-csv-reader-maker
    '((separator-chars               #\,)
      (strip-leading-whitespace?  . #t)
      (strip-trailing-whitespace? . #t))))
 
-(define (next-row in)
-      (make-food-csv-reader in))
+(define next-row #f)
+(define ignore #f)
+(define all-users #f)
+(define all #f)
 
-(define (all-users in)
-  (define ignore (next-row in)) ; skip header
-  (let ((x (next-row in)))
-    (if (empty? x)
-        empty
-        (cons x (all-users in)))))
-
-(define (all in) (all-users in))
+(define (start-reading-csv in)
+  (set! next-row (make-food-csv-reader in))
+  (set! ignore (next-row)) ; skip header
+  (set! all-users
+        (lambda ()
+          (let ((x (next-row)))
+            (if (empty? x)
+                empty
+                (cons x (all-users))))))
+  (set! all (all-users)))
 
 (define (user->studiengang in)
   (make-hash
