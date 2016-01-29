@@ -50,4 +50,4 @@
   ["grading-doc" (write-grading-docs-csv working-directory out)]
   ["student-identification" (if users-file
                                 (write-sid-table (open-input-file users-file) out)
-                                (display-error "Please specify users.csv file"))]) ; TODO: actually read users.csv file in (see TODO for write-sid-table)
+                                (display-error "Please specify users.csv file"))])

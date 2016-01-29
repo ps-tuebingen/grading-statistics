@@ -162,7 +162,6 @@
 
 ; Read a users.csv (student overview from forum json dump) as given by in
 ; any/c -> List-of student-identification-row
-; TODO: parameter in is currently ignored, instead just whatever is provided by users:all is used -> change users:all to allow a parameter
 (define (users-csv->sid-table in)
   (define (trim-row row)
     (student-identification-row (string-downcase (list-ref row USERNAME-COLUMN)) (list-ref row MNR-COLUMN) (string=? (list-ref row MEDIZINTECHNIK-COLUMN) MEDIZINTECHNIK-STRING)))
