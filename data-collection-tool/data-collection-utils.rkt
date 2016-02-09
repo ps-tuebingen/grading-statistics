@@ -1,6 +1,7 @@
 #lang racket/base
 
 (require racket/list)
+(require unstable/list)
 (require racket/dict)
 (require file/md5)
 
@@ -106,27 +107,53 @@
 (define (sum-max-points-for-hw wd hw)
   (apply + (max-points-for-wd (build-path wd hw))))
 
+; Collect grading documentation for the given score scr for the given student s in the working directory wd
+; student-score -> grading-doc-row
+(define ((collect-grading-doc-for-score s wd) scr)
+  (grading-doc-row s
+                   (path->string (student-score-path scr))
+                   (if (student-score-points scr)
+                       (student-score-points scr)
+                       0)
+                   (sum-max-points-for-hw wd (student-score-path scr))
+                   (student-score-handin? scr)))
+
+; Collect grading documentation for the sum of the given scores scrs for the given student s in the working directory wd
+; List-of student-score -> grading-doc-row
+(define (collect-grading-doc-sum-for-score s wd scrs)
+  (grading-doc-row s
+                   'all
+                   (apply + (map (lambda (score) (if (student-score-points score)
+                                                     (student-score-points score)
+                                                     0))
+                                 scrs))
+                   (apply + (map (lambda (score) (sum-max-points-for-hw wd (student-score-path score)))
+                                 scrs))
+                   #t))
+
+; Consolidate rows from subtasks of the same original task
+; The rows may not contain a row where homework-or-all is set to 'all
+; List-of grading-doc-row -> List-of grading-doc-row
+(define (consolidate-subtasks rs)
+  (define grading-doc-row-homework grading-doc-row-homework-or-all)
+  (define (hw-id r)
+    (take (string->list (grading-doc-row-homework r)) 2))
+  (define (consolidate rs)
+    (grading-doc-row (grading-doc-row-student (car rs))
+                     (if (> (length rs) 1)
+                         (list->string (hw-id (car rs)))
+                         (grading-doc-row-homework (car rs)))
+                     (apply + (map (lambda (r) (grading-doc-row-points r)) rs))
+                     (apply + (map (lambda (r) (grading-doc-row-max-points r)) rs))
+                     (ormap (lambda (r) (grading-doc-row-handin? r)) rs)))
+  (map consolidate (group-by (lambda (r) (hw-id r)) rs)))
+
 ; Collect all grading documentation for the given student s from the working directory wd
 ; String Path -> List-of grading-doc-row
 (define (collect-grading-doc s wd)
   (let ((scores (student-scores s wd)))
-    (append (map (lambda (scr) (grading-doc-row s
-                                              (path->string (student-score-path scr))
-                                              (if (student-score-points scr)
-                                                  (student-score-points scr)
-                                                  0)
-                                              (sum-max-points-for-hw wd (student-score-path scr))
-                                              (student-score-handin? scr)))
-               scores)
-            (list (grading-doc-row s
-                           'all
-                           (apply + (map (lambda (score) (if (student-score-points score)
-                                                             (student-score-points score)
-                                                             0))
-                                         scores))
-                           (apply + (map (lambda (score) (sum-max-points-for-hw wd (student-score-path score)))
-                                         scores))
-                           #t))))) ; Note: irrelevant data, don't interpret this as "handed something in"
+    (append (consolidate-subtasks (map (collect-grading-doc-for-score s wd) scores))
+            (list (collect-grading-doc-sum-for-score s wd scores))))) ; Note: irrelevant data, don't interpret this as "handed something in"
 
 ; Write collected (from the wd) grading documentation to the given output port out
 (define (write-grading-docs-csv wd out)
@@ -142,7 +169,7 @@
                                                           "false")))
                                    (collect-grading-doc s wd)))
                             (students-with-any-graded-handin wd)))
-                out))
+               out))
 
 ; (write-grading-docs-csv "../LocalPathForAllHandins/production" (open-output-file "../docs.csv"))
 
