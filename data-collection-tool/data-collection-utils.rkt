@@ -133,7 +133,7 @@
                      (apply + (map (lambda (r) (grading-doc-row-points r)) rs))
                      (apply + (map (lambda (r) (grading-doc-row-max-points r)) rs))
                      (ormap (lambda (r) (grading-doc-row-handin? r)) rs)))
-  (map consolidate (group-by (lambda (r) (hw-id r)) rs)))
+  (reverse (map consolidate (group-by (lambda (r) (hw-id r)) rs))))
 
 ; Produce a grading doc row for all homework by summing the relevant fields from the given grading documentation
 ; List-of grading-doc-row -> grading-doc-row
