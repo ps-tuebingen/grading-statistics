@@ -118,19 +118,6 @@
                    (sum-max-points-for-hw wd (student-score-path scr))
                    (student-score-handin? scr)))
 
-; Collect grading documentation for the sum of the given scores scrs for the given student s in the working directory wd
-; List-of student-score -> grading-doc-row
-(define (collect-grading-doc-sum-for-score s wd scrs)
-  (grading-doc-row s
-                   'all
-                   (apply + (map (lambda (score) (if (student-score-points score)
-                                                     (student-score-points score)
-                                                     0))
-                                 scrs))
-                   (apply + (map (lambda (score) (sum-max-points-for-hw wd (student-score-path score)))
-                                 scrs))
-                   #t)) ; Note: irrelevant data, don't interpret this as "handed something in"
-
 ; Consolidate rows from subtasks of the same original task
 ; The rows may not contain a row where homework-or-all is set to 'all
 ; List-of grading-doc-row -> List-of grading-doc-row
@@ -148,12 +135,22 @@
                      (ormap (lambda (r) (grading-doc-row-handin? r)) rs)))
   (map consolidate (group-by (lambda (r) (hw-id r)) rs)))
 
+; Produce a grading doc row for all homework by summing the relevant fields from the given grading documentation
+; List-of grading-doc-row -> grading-doc-row
+(define (grading-doc-sum rs)
+  (grading-doc-row (grading-doc-row-student (car rs))
+                   'all
+                   (apply + (map grading-doc-row-points rs))
+                   (apply + (map grading-doc-row-max-points rs))
+                   #t)) ; Note: irrelevant data, don't interpret this as "handed something in"
+
 ; Collect all grading documentation for the given student s from the working directory wd
 ; String Path -> List-of grading-doc-row
 (define (collect-grading-doc s wd)
-  (let ((scores (student-scores s wd)))
-    (append (consolidate-subtasks (map (collect-grading-doc-for-score s wd) scores))
-            (list (collect-grading-doc-sum-for-score s wd scores)))))
+  (let* ((scores (student-scores s wd))
+         (hw-grading-doc (consolidate-subtasks (map (collect-grading-doc-for-score s wd) scores))))
+    (append hw-grading-doc
+            (list (grading-doc-sum hw-grading-doc)))))
 
 ; Write collected (from the wd) grading documentation to the given output port out
 (define (write-grading-docs-csv wd out)
