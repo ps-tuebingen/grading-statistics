@@ -129,7 +129,7 @@
                                  scrs))
                    (apply + (map (lambda (score) (sum-max-points-for-hw wd (student-score-path score)))
                                  scrs))
-                   #t))
+                   #t)) ; Note: irrelevant data, don't interpret this as "handed something in"
 
 ; Consolidate rows from subtasks of the same original task
 ; The rows may not contain a row where homework-or-all is set to 'all
@@ -153,7 +153,7 @@
 (define (collect-grading-doc s wd)
   (let ((scores (student-scores s wd)))
     (append (consolidate-subtasks (map (collect-grading-doc-for-score s wd) scores))
-            (list (collect-grading-doc-sum-for-score s wd scores))))) ; Note: irrelevant data, don't interpret this as "handed something in"
+            (list (collect-grading-doc-sum-for-score s wd scores)))))
 
 ; Write collected (from the wd) grading documentation to the given output port out
 (define (write-grading-docs-csv wd out)
