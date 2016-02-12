@@ -135,6 +135,16 @@
                      (ormap (lambda (r) (grading-doc-row-handin? r)) rs)))
   (reverse (map consolidate (group-by (lambda (r) (hw-id r)) rs))))
 
+; Scale the points and max. points of the given rows rs according to the supplied list of coefficients cs
+(define (scale-scores rs cs)
+  (define (scale-row r c)
+    (grading-doc-row (grading-doc-row-student r)
+                     (grading-doc-row-homework-or-all r)
+                     (* (grading-doc-row-points r) c)
+                     (* (grading-doc-row-max-points r) c)
+                     (grading-doc-row-handin? r)))
+  (map scale-row rs cs))
+
 ; Produce a grading doc row for all homework by summing the relevant fields from the given grading documentation
 ; List-of grading-doc-row -> grading-doc-row
 (define (grading-doc-sum rs)
@@ -144,11 +154,15 @@
                    (apply + (map grading-doc-row-max-points rs))
                    #t)) ; Note: irrelevant data, don't interpret this as "handed something in"
 
+; currently hardcoded for pragmatic reasons
+(define SCALING-COEFFS (list 25 1 1 1 1 1 1 1 1 1 1 1 1 1))
+
 ; Collect all grading documentation for the given student s from the working directory wd
 ; String Path -> List-of grading-doc-row
 (define (collect-grading-doc s wd)
   (let* ((scores (student-scores s wd))
-         (hw-grading-doc (consolidate-subtasks (map (collect-grading-doc-for-score s wd) scores))))
+         (hw-grading-doc (scale-scores (consolidate-subtasks (map (collect-grading-doc-for-score s wd) scores))
+                                       SCALING-COEFFS)))
     (append hw-grading-doc
             (list (grading-doc-sum hw-grading-doc)))))
 
