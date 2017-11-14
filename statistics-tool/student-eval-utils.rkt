@@ -4,7 +4,6 @@
 (require racket/list)
 (require racket/math)
 (require racket/function)
-(require unstable/list)
 (require racket/bool)
 (require math/statistics)
 (require plot)

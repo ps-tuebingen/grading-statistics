@@ -1,7 +1,6 @@
 #lang racket/base
 
 (require racket/list)
-(require unstable/list)
 (require racket/dict)
 (require file/md5)
 
