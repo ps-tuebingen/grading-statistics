@@ -12,7 +12,9 @@
 
 (provide write-grading-data-csv
          write-grading-docs-csv
-         write-sid-table)
+         write-sid-table
+         collect-grading-doc
+         (struct-out grading-doc-row))
 
 ; For statistics use (csv dump generation)
 ; ========================================
@@ -98,7 +100,8 @@
 ; - points: the points of the student for the respective homework or in sum, depending on homework-or-all
 ; - max-points: the maximum points possible, likewise depending on homework-or-all
 ; - handin?: a Boolean, indicates whether the student handed something in (only relevant when homework-or-all is not 'all)
-(define-struct grading-doc-row (student homework-or-all points max-points handin?))
+; - corrected?: a Boolean, indicates whether the handin is already corrected (only relevant when homework-or-all is not 'all)
+(define-struct grading-doc-row (student homework-or-all points max-points handin? corrected?))
 
 ; The maximum points for the given homework hw (in working directory wd)
 ; (often 100, but not always)
@@ -115,7 +118,10 @@
                        (student-score-points scr)
                        0)
                    (sum-max-points-for-hw wd (student-score-path scr))
-                   (student-score-handin? scr)))
+                   (student-score-handin? scr)
+                   (if (student-score-points scr)
+                       #t
+                       #f)))
 
 ; Consolidate rows from subtasks of the same original task
 ; The rows may not contain a row where homework-or-all is set to 'all
@@ -131,7 +137,8 @@
                          (grading-doc-row-homework (car rs)))
                      (apply + (map (lambda (r) (grading-doc-row-points r)) rs))
                      (apply + (map (lambda (r) (grading-doc-row-max-points r)) rs))
-                     (ormap (lambda (r) (grading-doc-row-handin? r)) rs)))
+                     (ormap (lambda (r) (grading-doc-row-handin? r)) rs)
+                     (andmap (lambda (r) (grading-doc-row-corrected? r)) rs)))
   (reverse (map consolidate (group-by (lambda (r) (hw-id r)) rs))))
 
 ; Scale the points and max. points of the given rows rs according to the supplied list of coefficients cs
@@ -141,7 +148,8 @@
                      (grading-doc-row-homework-or-all r)
                      (* (grading-doc-row-points r) c)
                      (* (grading-doc-row-max-points r) c)
-                     (grading-doc-row-handin? r)))
+                     (grading-doc-row-handin? r)
+                     (grading-doc-row-corrected? r)))
   (map scale-row rs cs))
 
 ; Produce a grading doc row for all homework by summing the relevant fields from the given grading documentation
@@ -151,10 +159,20 @@
                    'all
                    (apply + (map grading-doc-row-points rs))
                    (apply + (map grading-doc-row-max-points rs))
-                   #t)) ; Note: irrelevant data, don't interpret this as "handed something in"
+                   #t   ; Note: irrelevant data, don't interpret this as "handed something in"
+                   #t)) ; Note: irrelevant data, don't interpret this as "all corrected"
 
 ; currently hardcoded for pragmatic reasons
-(define SCALING-COEFFS (list 25 1 1 1 1 1 1 1 1 1 1 1 1 1))
+; info1 ws15
+; (define SCALING-COEFFS (list 25 1 1 1 1 1 1 1 1 1 1 1 1 1))
+; info1 ws17 up to and including hw 10
+; important NOTE: the directories seem to be accessed in the reverse order
+; _maybe_ this has something to do with the new racket version -- must investigate
+; (define SCALING-COEFFS (list 1 1 1 1 1 1 1 1 1 20))
+; info1 ws17 up to and including hw 12
+; (define SCALING-COEFFS (list 1 1 1 1 1 1 1 1 1 1 1 20))
+; info1 ws17 up to and including hw 14
+(define SCALING-COEFFS (list 1 1 1 1 1 1 1 1 1 1 1 1 1 20))
 
 ; Collect all grading documentation for the given student s from the working directory wd
 ; String Path -> List-of grading-doc-row
@@ -168,13 +186,16 @@
 ; Write collected (from the wd) grading documentation to the given output port out
 (define (write-grading-docs-csv wd out)
   (write-table (cons
-                (list "student-id" "homework-or-all" "points" "max-points" "handin?")
+                (list "student-id" "homework-or-all" "points" "max-points" "handin?" "corrected?")
                 (append-map (lambda (s)
                               (map (lambda (gd) (list (grading-doc-row-student gd)
                                                       (grading-doc-row-homework-or-all gd)
                                                       (grading-doc-row-points gd)
                                                       (grading-doc-row-max-points gd)
                                                       (if (grading-doc-row-handin? gd)
+                                                          "true"
+                                                          "false")
+                                                      (if (grading-doc-row-corrected? gd)
                                                           "true"
                                                           "false")))
                                    (collect-grading-doc s wd)))
@@ -194,7 +215,9 @@
 ; Some constants for use in reading in student id tables from users.csv files
 (define MEDIZINTECHNIK-STRING "Medizintechnik (Uni Stuttgart)")
 (define USERNAME-COLUMN 2)
-(define MNR-COLUMN 43)
+; ws15
+;(define MNR-COLUMN 43)
+(define MNR-COLUMN 41)
 (define MEDIZINTECHNIK-COLUMN 36)
 
 ; Read a users.csv (student overview from forum json dump) as given by in

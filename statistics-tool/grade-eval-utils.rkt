@@ -9,7 +9,7 @@
 
 (define GRADE-FILENAME "grade.rktd")
 (define TEMPLATE-FILENAME "grade-template.rktd")
-(define DIRECTORY-SEARCH-DEPTH-LIMIT 2)
+(define DIRECTORY-SEARCH-DEPTH-LIMIT 1)
 
 
 
