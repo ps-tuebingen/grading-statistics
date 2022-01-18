@@ -172,7 +172,9 @@
 ; info1 ws17 up to and including hw 12
 ; (define SCALING-COEFFS (list 1 1 1 1 1 1 1 1 1 1 1 20))
 ; info1 ws17 up to and including hw 14
-(define SCALING-COEFFS (list 1 1 1 1 1 1 1 1 1 1 1 1 1 20))
+;(define SCALING-COEFFS (list 1 1 1 1 1 1 1 1 1 1 1 1 1 20))
+; info1 ws21 up to and including hw 12
+(define SCALING-COEFFS (list 1 1 1 1 1 1 1 1 1 1 1 20))
 
 ; Collect all grading documentation for the given student s from the working directory wd
 ; String Path -> List-of grading-doc-row
