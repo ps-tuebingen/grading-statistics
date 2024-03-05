@@ -2,6 +2,7 @@
 
 (require racket/list)
 (require racket/dict)
+(require racket/string)
 (require file/md5)
 
 (require (planet dherman/csv-write:1:2/csv-write))
@@ -26,7 +27,7 @@
 ; - a Student ID (String)
 ; - a Homework ID (String)
 ; - a Number of submissions (Integer)
-; - a Grade (Number between 0 and 100)
+; - a Grade (Number between 0 and 2)
 ; - a "Good Checker?" flag (Boolean)
 ; - a Tutor ID (String)
 (define-struct grading-data (student homework number-handins grade good-checker? tutor))
@@ -104,10 +105,14 @@
 (define-struct grading-doc-row (student homework-or-all points max-points handin? corrected?))
 
 ; The maximum points for the given homework hw (in working directory wd)
-; (often 100, but not always)
-; Path String -> Points
+; (now always 2, except for first hw)
+; Path Path -> Points
+;(define (sum-max-points-for-hw wd hw)
+;  (apply + (max-points-for-wd (build-path wd hw))))
 (define (sum-max-points-for-hw wd hw)
-  (apply + (max-points-for-wd (build-path wd hw))))
+  (if (string-contains? (path->string hw) "01-")
+      1
+      2))
 
 ; Collect grading documentation for the given score scr for the given student s in the working directory wd
 ; student-score -> grading-doc-row
@@ -174,7 +179,9 @@
 ; info1 ws17 up to and including hw 14
 ;(define SCALING-COEFFS (list 1 1 1 1 1 1 1 1 1 1 1 1 1 20))
 ; info1 ws21 up to and including hw 12
-(define SCALING-COEFFS (list 1 1 1 1 1 1 1 1 1 1 1 20))
+;(define SCALING-COEFFS (list 1 1 1 1 1 1 1 1 1 1 1 20))
+; info1 ws23 up to and including hw 14
+(define SCALING-COEFFS (list 1 1 1 1 1 1 1 1 1 1 1 1 1 1))
 
 ; Collect all grading documentation for the given student s from the working directory wd
 ; String Path -> List-of grading-doc-row

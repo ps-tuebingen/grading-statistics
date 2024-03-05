@@ -166,7 +166,7 @@
         (non-existing-grading-file (filter (lambda (gr) (eq? (grading-record-table gr) #false)) all))
         (existing-grading-file (filter (lambda (gr) (not (eq? (grading-record-table gr) #false))) all))
         (erroneous (filter (lambda (gr) (erroneous-grading-table? (grading-record-table gr))) existing-grading-file))
-        (morethan100points (filter (lambda (gs) (> (grading-table-total (grading-record-table gs)) 100)) (all-finished-grading-tables* wd))))
+        (morethan2points (filter (lambda (gs) (> (grading-table-total (grading-record-table gs)) 2)) (all-finished-grading-tables* wd))))
     (begin
       (display-grading-tables non-existing-grading-file
                               (lambda (p) (format "~a " (grading-record-name p)))
@@ -174,9 +174,9 @@
       (display-grading-tables erroneous
                               (lambda (p) (format "~a " (grading-record-name p)))
                               "Grading ist noch nicht fertig oder Fehler im Format")
-;      (display-grading-tables morethan100points
+;      (display-grading-tables morethan2points
 ;                              (lambda (p) (format "~a " (grading-record-name p)))
-;                              "Grading tables with more than 100 points: ")
+;                              "Grading tables with more than 2 points: ")
   )))
 
 
